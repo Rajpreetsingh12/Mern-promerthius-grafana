@@ -1,32 +1,15 @@
-route:
-  group_by: ['alertname', 'instance']  # Group by alertname and instance for better granularity
-  group_wait: 30s                       # Wait 30 seconds before sending the first notification
-  group_interval: 5m                    # Wait 5 minutes before sending additional notifications
-  repeat_interval: 1h                   # Resend notifications every hour if the alert is still firing
-  routes:                                # Nested routes for specific alert types
-    - match:
-        severity: critical               # Match critical alerts
-      receiver: 'web.hook'               # Send critical alerts to the webhook
-      continue: true                     # Continue processing other routes
+global:
+  scrape_interval: 15s  # How often Prometheus will scrape the metrics (adjust as needed)
 
-    - match:
-        severity: warning                 # Match warning alerts
-      receiver: 'web.hook'                # Send warning alerts to the same webhook
-      continue: false                    # Stop processing further routes for warnings
-
-    - match:
-        severity: info                    # Match info alerts
-      receiver: 'web.hook'                # Send info alerts to the same webhook
-      continue: false                    # Stop processing further routes for info
-
-receivers:
-  - name: 'web.hook'
-    webhook_configs:
-      - url: 'http://127.0.0.1:5001/'     # Webhook URL to send alerts to
-
-inhibit_rules:
-  - source_match:
-      severity: 'critical'                # Inhibit warnings when there are critical alerts
-    target_match:
-      severity: 'warning'
-    equal: ['alertname', 'dev', 'instance'] # Ensure that inhibiting is based on alertname, dev, and instance labels
+scrape_configs:
+  - job_name: 'backend_metrics'  # Name of your job
+    metrics_path: '/metrics'  # Path where metrics are exposed (default is /metrics)
+    static_configs:
+      - targets: ['localhost:3001']  # The backend service URL (adjust if running elsewhere)
+rule_files:
+  - "alert.rules.yml"  # Path to your alerting rules file
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - 'localhost:9093'  # Assuming Alertmanager is running locally

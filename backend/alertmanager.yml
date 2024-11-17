@@ -26,7 +26,3 @@ receivers:
 
 inhibit_rules:
   - source_match:
-      severity: 'critical'                # Inhibit warnings when there are critical alerts
-    target_match:
-      severity: 'warning'
-    equal: ['alertname', 'dev', 'instance'] # Ensure that inhibiting is based on alertname, dev, and instance labels
